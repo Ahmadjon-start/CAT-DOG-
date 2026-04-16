@@ -1,0 +1,598 @@
+DOCTYPE html>
+<html lang="tg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Созандаи Плани Хона (Тоҷикӣ) - Девор, Тиреза, Мебел</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+        }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 16px;
+        }
+        .app-container {
+            max-width: 1100px;
+            width: 100%;
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            overflow: hidden;
+            padding: 20px;
+        }
+        h1 {
+            margin: 0 0 8px 0;
+            font-size: 28px;
+            color: #1e293b;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .subtitle {
+            margin: 0 0 20px 0;
+            color: #64748b;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 15px;
+        }
+        .toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 20px;
+            background: #f8fafc;
+            padding: 12px 16px;
+            border-radius: 40px;
+            border: 1px solid #e2e8f0;
+        }
+        .tool-btn {
+            background: white;
+            border: 1px solid #cbd5e1;
+            color: #1e293b;
+            padding: 10px 18px;
+            border-radius: 30px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            transition: all 0.15s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .tool-btn:hover {
+            background: #eef2ff;
+            border-color: #818cf8;
+        }
+        .tool-btn.active {
+            background: #4f46e5;
+            border-color: #4f46e5;
+            color: white;
+            box-shadow: 0 4px 8px rgba(79,70,229,0.2);
+        }
+        .tool-btn.clear {
+            margin-left: auto;
+            background: #fee2e2;
+            border-color: #fecaca;
+            color: #b91c1c;
+        }
+        .tool-btn.clear:hover {
+            background: #fecaca;
+        }
+        .canvas-wrapper {
+            background: #ffffff;
+            border-radius: 20px;
+            border: 2px solid #e2e8f0;
+            box-shadow: inset 0 0 0 1px rgba(0,0,0,0.02);
+            overflow: auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 10px;
+        }
+        canvas {
+            display: block;
+            background: #faf9f6;
+            box-shadow: 0 0 0 1px #d1d5db;
+            border-radius: 12px;
+            cursor: crosshair;
+            width: 100%;
+            height: auto;
+            max-width: 900px;
+            touch-action: none; /* бехтар барои мобил */
+        }
+        .status-bar {
+            margin-top: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #334155;
+            font-size: 15px;
+        }
+        .legend {
+            display: flex;
+            gap: 20px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .color-dot {
+            width: 18px;
+            height: 18px;
+            border-radius: 4px;
+        }
+        .instructions {
+            background: #f1f5f9;
+            padding: 8px 16px;
+            border-radius: 30px;
+            font-size: 14px;
+        }
+        kbd {
+            background: #1e293b;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-size: 13px;
+            margin: 0 4px;
+        }
+        .footer-note {
+            margin-top: 12px;
+            text-align: center;
+            color: #64748b;
+        }
+    </style>
+</head>
+<body>
+<div class="app-container">
+    <h1>🏠 Плансози Хона</h1>
+    <div class="subtitle">Девор, Тиреза, Дар ва Мебелро бо як клик ҷойгир кунед</div>
+    
+    <!-- Асбобҳо -->
+    <div class="toolbar">
+        <button class="tool-btn active" data-tool="wall">🧱 Девор</button>
+        <button class="tool-btn" data-tool="window">🪟 Тиреза</button>
+        <button class="tool-btn" data-tool="door">🚪 Дар</button>
+        <button class="tool-btn" data-tool="furniture">🪑 Мебел</button>
+        <button class="tool-btn clear" id="clearBtn">🗑️ Тоза кардан</button>
+    </div>
+    
+    <!-- Майдони кашидашаванда -->
+    <div class="canvas-wrapper">
+        <canvas id="houseCanvas" width="900" height="600"></canvas>
+    </div>
+    
+    <!-- Сатри ҳолат -->
+    <div class="status-bar">
+        <div class="legend">
+            <div class="legend-item"><span class="color-dot" style="background: #1e1e1e;"></span> Девор</div>
+            <div class="legend-item"><span class="color-dot" style="background: #3b82f6;"></span> Тиреза</div>
+            <div class="legend-item"><span class="color-dot" style="background: #b45309;"></span> Дар</div>
+            <div class="legend-item"><span class="color-dot" style="background: #16a34a;"></span> Мебел</div>
+        </div>
+        <div class="instructions">
+            <kbd>Клик</kbd> барои гузоштан · <kbd>Ctrl+Z</kbd> бекор
+        </div>
+    </div>
+    <div class="footer-note">
+        ⚡ Барои девор ду нуқта клик кунед. Барои дигар ашё — танҳо як клик ба ҷои дилхоҳ.
+    </div>
+</div>
+
+<script>
+    (function(){
+        "use strict";
+
+        // ---------- Танзимоти Canvas ----------
+        const canvas = document.getElementById('houseCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Андозаҳои собит (барои осонии кор)
+        const CW = 900;
+        const CH = 600;
+        canvas.width = CW;
+        canvas.height = CH;
+
+        // ---------- Ҳолати барнома ----------
+        let currentTool = 'wall';        // wall, window, door, furniture
+        
+        // Массивҳои ашёҳо
+        let walls = [];                  // ҳар як девор: { x1, y1, x2, y2 }
+        let windows = [];               // { x, y } (маркази тиреза)
+        let doors = [];                 // { x, y } (маркази дар)
+        let furniture = [];             // { x, y } (маркази мебел)
+        
+        // Барои кашидани девор (ҳолати интизорӣ барои нуқтаи дуюм)
+        let tempWallStart = null;        // { x, y } нуқтаи аввали девор
+        
+        // Таърих барои Ctrl+Z (содда: як сатҳ)
+        let history = [];
+        const MAX_HISTORY = 30;
+
+        // ---------- Функсияи сабти ҳолат барои бекоркунӣ ----------
+        function saveState() {
+            const state = {
+                walls: walls.map(w => ({...w})),
+                windows: windows.map(w => ({...w})),
+                doors: doors.map(d => ({...d})),
+                furniture: furniture.map(f => ({...f}))
+            };
+            history.push(state);
+            if (history.length > MAX_HISTORY) history.shift();
+        }
+
+        function undo() {
+            if (history.length < 2) return; // ҳадди ақал як ҳолати қаблӣ
+            history.pop(); // ҳолати ҷорӣ
+            const prev = history[history.length - 1];
+            walls = prev.walls.map(w => ({...w}));
+            windows = prev.windows.map(w => ({...w}));
+            doors = prev.doors.map(d => ({...d}));
+            furniture = prev.furniture.map(f => ({...f}));
+            tempWallStart = null;
+            drawCanvas();
+        }
+
+        // Сабти аввала
+        saveState();
+
+        // ---------- Навсозии тугмаҳои асбоб (active) ----------
+        function updateToolButtons() {
+            document.querySelectorAll('.tool-btn[data-tool]').forEach(btn => {
+                const tool = btn.getAttribute('data-tool');
+                if (tool === currentTool) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+        }
+
+        // ---------- Тоза кардани ҳама ----------
+        function clearAll() {
+            if (walls.length === 0 && windows.length === 0 && doors.length === 0 && furniture.length === 0) return;
+            walls = [];
+            windows = [];
+            doors = [];
+            furniture = [];
+            tempWallStart = null;
+            saveState();
+            drawCanvas();
+        }
+
+        // ---------- Кашидани ҳама чиз ----------
+        function drawCanvas() {
+            ctx.clearRect(0, 0, CW, CH);
+            
+            // 1. Кашидани тор (барои осонии нишондиҳӣ)
+            ctx.save();
+            ctx.strokeStyle = "#e5e7eb";
+            ctx.lineWidth = 0.6;
+            for (let i = 0; i < CW; i += 30) {
+                ctx.beginPath();
+                ctx.moveTo(i, 0);
+                ctx.lineTo(i, CH);
+                ctx.strokeStyle = "#e5e7eb";
+                ctx.stroke();
+            }
+            for (let i = 0; i < CH; i += 30) {
+                ctx.beginPath();
+                ctx.moveTo(0, i);
+                ctx.lineTo(CW, i);
+                ctx.stroke();
+            }
+            
+            // 2. Деворҳо
+            ctx.save();
+            ctx.lineWidth = 6;
+            ctx.strokeStyle = "#1e1e1e";
+            ctx.lineCap = 'round';
+            walls.forEach(w => {
+                ctx.beginPath();
+                ctx.moveTo(w.x1, w.y1);
+                ctx.lineTo(w.x2, w.y2);
+                ctx.stroke();
+            });
+            
+            // Агар девор дар ҳоли кашидашавӣ бошад (нуқтаи аввал гузошта шуда)
+            if (tempWallStart) {
+                ctx.beginPath();
+                ctx.arc(tempWallStart.x, tempWallStart.y, 5, 0, 2 * Math.PI);
+                ctx.fillStyle = "#1e1e1e";
+                ctx.fill();
+                ctx.strokeStyle = "#1e1e1e";
+                ctx.lineWidth = 2;
+                ctx.setLineDash([6, 6]);
+                ctx.beginPath();
+                ctx.moveTo(tempWallStart.x, tempWallStart.y);
+                // нуқтаи мушро аз рӯйи координатаҳои глобалӣ мегирем, аммо ин ҷо хатти пунктирро то ҳаракати муш нав мекунем
+                // дар ҳодисаи mousemove идора мекунем.
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
+            
+            // 3. Тирезаҳо
+            windows.forEach(w => {
+                drawWindow(ctx, w.x, w.y);
+            });
+            
+            // 4. Дарҳо
+            doors.forEach(d => {
+                drawDoor(ctx, d.x, d.y);
+            });
+            
+            // 5. Мебел
+            furniture.forEach(f => {
+                drawFurniture(ctx, f.x, f.y);
+            });
+            
+            ctx.restore();
+            
+            // Агар девор дар ҳолати интизорӣ бошад, хатти пунктирро аз нав мекашем (барои дидани хат)
+            if (tempWallStart) {
+                // Инро дар ҳодисаи mousemove низ идора мекунем, аммо дар ин ҷо низ барои бехатарӣ
+                // дар ҳар сурат дар mousemove дубора расм мекашем.
+            }
+        }
+
+        // ---------- Функсияҳои кашидани ашёҳо ----------
+        function drawWindow(ctx, x, y) {
+            const w = 34;
+            const h = 14;
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.fillStyle = "#bfdbfe";
+            ctx.fillRect(-w/2, -h/2, w, h);
+            ctx.strokeStyle = "#1e3a8a";
+            ctx.lineWidth = 2.5;
+            ctx.strokeRect(-w/2, -h/2, w, h);
+            // чорчӯба
+            ctx.beginPath();
+            ctx.moveTo(0, -h/2);
+            ctx.lineTo(0, h/2);
+            ctx.moveTo(-w/2, 0);
+            ctx.lineTo(w/2, 0);
+            ctx.strokeStyle = "#1e3a8a";
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+            ctx.restore();
+        }
+
+        function drawDoor(ctx, x, y) {
+            const w = 28;
+            const h = 36;
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.fillStyle = "#fde68a";
+            ctx.fillRect(-w/2, -h/2, w, h);
+            ctx.strokeStyle = "#92400e";
+            ctx.lineWidth = 3;
+            ctx.strokeRect(-w/2, -h/2, w, h);
+            // дастаки дар
+            ctx.beginPath();
+            ctx.arc(w/2 - 7, 0, 4, 0, 2 * Math.PI);
+            ctx.fillStyle = "#b45309";
+            ctx.fill();
+            ctx.strokeStyle = "#78350f";
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+            // камон барои нишондиҳандаи кушодашавӣ
+            ctx.beginPath();
+            ctx.arc(-w/2 + 4, -h/2 + 6, 10, 0.2, 1.4);
+            ctx.strokeStyle = "#92400e";
+            ctx.lineWidth = 1.5;
+            ctx.setLineDash([3, 3]);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            ctx.restore();
+        }
+
+        function drawFurniture(ctx, x, y) {
+            ctx.save();
+            ctx.translate(x, y);
+            // миз ё курсӣ (содда)
+            ctx.fillStyle = "#86efac";
+            ctx.shadowColor = "#166534";
+            ctx.shadowBlur = 6;
+            ctx.beginPath();
+            ctx.ellipse(0, 0, 16, 10, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+            ctx.strokeStyle = "#166534";
+            ctx.lineWidth = 2.5;
+            ctx.stroke();
+            ctx.fillStyle = "#15803d";
+            ctx.beginPath();
+            ctx.arc(0, 0, 6, 0, 2 * Math.PI);
+            ctx.fill();
+            ctx.restore();
+        }
+
+        // ---------- Илова кардани ашё ба массив (бо сабти таърих) ----------
+        function addWall(x1, y1, x2, y2) {
+            if (Math.hypot(x2 - x1, y2 - y1) < 5) return; // хеле кӯтоҳ
+            walls.push({ x1, y1, x2, y2 });
+            saveState();
+            drawCanvas();
+        }
+
+        function addWindow(x, y) {
+            windows.push({ x, y });
+            saveState();
+            drawCanvas();
+        }
+
+        function addDoor(x, y) {
+            doors.push({ x, y });
+            saveState();
+            drawCanvas();
+        }
+
+        function addFurniture(x, y) {
+            furniture.push({ x, y });
+            saveState();
+            drawCanvas();
+        }
+
+        // ---------- Муайян кардани координатаҳои нисбӣ ба канвас ----------
+        function getCanvasCoords(e) {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;   // одатан 1 агар css width = canvas.width
+            const scaleY = canvas.height / rect.height;
+            
+            let clientX, clientY;
+            if (e.touches) {
+                clientX = e.touches[0].clientX;
+                clientY = e.touches[0].clientY;
+            } else {
+                clientX = e.clientX;
+                clientY = e.clientY;
+            }
+            
+            // маҳдуд кардан ба дохили канвас
+            let x = (clientX - rect.left) * scaleX;
+            let y = (clientY - rect.top) * scaleY;
+            x = Math.min(Math.max(x, 0), CW);
+            y = Math.min(Math.max(y, 0), CH);
+            return { x, y };
+        }
+
+        // ---------- Коркарди кликҳо ва ламс ----------
+        function handleCanvasClick(e) {
+            e.preventDefault();
+            const coords = getCanvasCoords(e);
+            const { x, y } = coords;
+            
+            if (currentTool === 'wall') {
+                // Девор: клики аввал нуқтаи ибтидо, клики дуюм нуқтаи охир
+                if (!tempWallStart) {
+                    tempWallStart = { x, y };
+                    drawCanvas();
+                    // нишон додани нуқта
+                } else {
+                    // клики дуюм: деворро илова кун
+                    const start = tempWallStart;
+                    addWall(start.x, start.y, x, y);
+                    tempWallStart = null;
+                }
+            } else if (currentTool === 'window') {
+                addWindow(x, y);
+            } else if (currentTool === 'door') {
+                addDoor(x, y);
+            } else if (currentTool === 'furniture') {
+                addFurniture(x, y);
+            }
+        }
+
+        // Барои намоиши хати пунктир ҳангоми кашидани девор
+        function handleCanvasMove(e) {
+            if (currentTool !== 'wall' || !tempWallStart) return;
+            e.preventDefault();
+            const coords = getCanvasCoords(e);
+            
+            // Расми муваққатӣ
+            drawCanvas(); // аввал ҳама чизи доимиро мекашем
+            
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(tempWallStart.x, tempWallStart.y, 5, 0, 2 * Math.PI);
+            ctx.fillStyle = "#1e1e1e";
+            ctx.fill();
+            ctx.strokeStyle = "#1e1e1e";
+            ctx.lineWidth = 2;
+            ctx.setLineDash([6, 6]);
+            ctx.beginPath();
+            ctx.moveTo(tempWallStart.x, tempWallStart.y);
+            ctx.lineTo(coords.x, coords.y);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            ctx.restore();
+        }
+
+        // Бекор кардани интихоби нуқтаи девор бо тугмаи рост ё Esc
+        function cancelWall() {
+            if (tempWallStart) {
+                tempWallStart = null;
+                drawCanvas();
+            }
+        }
+
+        // ---------- Идоракунии ҳодисаҳо ----------
+        canvas.addEventListener('click', handleCanvasClick);
+        canvas.addEventListener('mousemove', handleCanvasMove);
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            // Барои мобил, кликро тақлид мекунем
+            const touch = e.touches[0];
+            const fakeEvent = { clientX: touch.clientX, clientY: touch.clientY, preventDefault: ()=>{} };
+            handleCanvasClick(fakeEvent);
+        }, {passive: false});
+        
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            if (currentTool === 'wall' && tempWallStart) {
+                const touch = e.touches[0];
+                const fakeEvent = { clientX: touch.clientX, clientY: touch.clientY, preventDefault: ()=>{} };
+                handleCanvasMove(fakeEvent);
+            }
+        }, {passive: false});
+        
+        canvas.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            // агар лозим бошад
+        });
+        
+        // Контекст менюро хомӯш мекунем
+        canvas.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            cancelWall();
+        });
+
+        // Тугмаҳои асбоб
+        document.querySelectorAll('.tool-btn[data-tool]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                currentTool = btn.getAttribute('data-tool');
+                updateToolButtons();
+                cancelWall(); // агар дар ҳоли кашидани девор буд, бекор кун
+            });
+        });
+
+        // Тугмаи тозакунӣ
+        document.getElementById('clearBtn').addEventListener('click', clearAll);
+
+        // Ctrl+Z
+        window.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.key === 'z') {
+                e.preventDefault();
+                undo();
+                cancelWall();
+            }
+            if (e.key === 'Escape') {
+                cancelWall();
+            }
+        });
+
+        // Ибтидои расмкашӣ
+        updateToolButtons();
+        drawCanvas();
+        
+        // Барои пешгирӣ аз рафтори номатлуб ҳангоми кашолакунӣ
+        canvas.addEventListener('dragstart', (e) => e.preventDefault());
+        
+        // Агар муш аз канвас берун равад, хати пунктирро нигоҳ медорем (бе хат)
+        canvas.addEventListener('mouseleave', () => {
+            if (tempWallStart) {
+                drawCanvas(); // расми бе хати пунктир
+            }
+        });
+    })();
+</script>
+</body>
+</html>
